@@ -59,6 +59,16 @@
 
       <section id="studentView" class="hidden" aria-live="polite"></section>
       <section id="adminView" class="hidden" aria-live="polite"></section>
+      <section id="counselPanel" class="counsel-panel hidden">
+        <h3 id="counselStudentHeader">AI 상담 전략 도우미</h3>
+        <div id="selectedStudentInfo"></div>
+        <textarea id="teacherConcern" placeholder="수업 참여는 좋은데 평가 결과가 낮습니다. 어떻게 상담하면 좋을까요?" rows="4"></textarea>
+        <pre id="dataPreview" class="json-preview"></pre>
+        <button id="sendCounselBtn" class="primary-button">AI 상담 전략 받기</button>
+        <div id="counselResult" class="counsel-result"></div>
+        <div id="counselError" class="error-message"></div>
+        <p class="disclaimer">AI 상담 전략은 참고용입니다. 최종 판단과 실제 상담은 교사가 학생의 상황을 종합적으로 고려하여 진행해야 합니다.</p>
+      </section>
     </main>
 
     <script src="app.js"></script>

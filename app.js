@@ -135,6 +135,7 @@ function renderStudentPage(student) {
             <span class="tag">프로젝트</span>
           </div>
         </div>
+        <button class="counsel-btn" data-student-id="${student.id}">상담 전략 요청</button>
       </article>
 
       <div class="content-stack">
@@ -176,6 +177,7 @@ function renderStudentCard(student) {
         <p class="student-number">학번 ${student.id}</p>
         ${renderGrades(student.grades, true, `gradesTitle-${student.id}`)}
         ${renderTraits(student)}
+        <button class="counsel-btn" data-student-id="${student.id}">상담 전략 요청</button>
       </div>
     </article>
   `;
@@ -213,3 +215,98 @@ function renderTraits(student) {
 }
 
 showOnly(loginView);
+
+// ---------- AI 상담 전략 도우미 로직 ----------
+// Alias mapping for anonymized student names
+const aliasMap = {
+  "10101": "학생 A",
+  "10102": "학생 B",
+  "10103": "학생 C",
+};
+
+let currentCounsel = {
+  alias: "",
+  gradeSummary: "",
+  learningTraits: "",
+};
+
+const counselPanel = document.getElementById("counselPanel");
+const selectedStudentInfo = document.getElementById("selectedStudentInfo");
+const teacherConcernInput = document.getElementById("teacherConcern");
+const dataPreview = document.getElementById("dataPreview");
+const sendCounselBtn = document.getElementById("sendCounselBtn");
+const counselResult = document.getElementById("counselResult");
+const counselError = document.getElementById("counselError");
+
+// Handle click on 상담 전략 요청 button
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.classList.contains("counsel-btn")) {
+    const studentId = e.target.dataset.studentId;
+    const student = STUDENTS.find((s) => s.id === studentId);
+    if (!student) return;
+    const alias = aliasMap[student.id] || student.name;
+    const gradeSummary = Object.entries(student.grades)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(", ");
+    const learningTraits = student.traits.join(", ");
+    currentCounsel = { alias, gradeSummary, learningTraits };
+
+    selectedStudentInfo.innerHTML = `<p><strong>${student.name}</strong> (학번 ${student.id})</p>`;
+    teacherConcernInput.value = "";
+    dataPreview.textContent = JSON.stringify({
+      studentAlias: alias,
+      gradeSummary,
+      learningTraits,
+      teacherConcern: "",
+    }, null, 2);
+    counselResult.textContent = "";
+    counselError.textContent = "";
+    counselPanel.classList.remove("hidden");
+  }
+});
+
+// Update preview when teacher types concern
+teacherConcernInput.addEventListener("input", () => {
+  const preview = {
+    studentAlias: currentCounsel.alias,
+    gradeSummary: currentCounsel.gradeSummary,
+    learningTraits: currentCounsel.learningTraits,
+    teacherConcern: teacherConcernInput.value,
+  };
+  dataPreview.textContent = JSON.stringify(preview, null, 2);
+});
+
+// Send request to serverless function
+sendCounselBtn.addEventListener("click", async () => {
+  const concern = teacherConcernInput.value.trim();
+  if (!concern) {
+    counselError.textContent = "상담 고민을 먼저 입력해주세요.";
+    return;
+  }
+  counselError.textContent = "";
+  counselResult.textContent = "AI가 상담 전략을 생성하는 중입니다...";
+  try {
+    const res = await fetch("/api/gemini-counseling", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentAlias: currentCounsel.alias,
+        gradeSummary: currentCounsel.gradeSummary,
+        learningTraits: currentCounsel.learningTraits,
+        teacherConcern: concern,
+      }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      counselResult.textContent = data.result;
+    } else {
+      counselError.textContent = data.error || "AI 상담 전략을 불러오지 못했습니다. API 키 또는 Vercel 환경 변수를 확인해주세요.";
+      counselResult.textContent = "";
+    }
+  } catch (err) {
+    counselError.textContent = "AI 상담 전략을 불러오지 못했습니다. API 키 또는 Vercel 환경 변수를 확인해주세요.";
+    counselResult.textContent = "";
+  }
+});
+// --------------------------------------------
+
