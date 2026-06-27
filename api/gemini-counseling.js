@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   const prompt = `You are an AI assistant that helps teachers create counseling strategies for students. Do NOT make definitive diagnoses. Provide output in Korean with the following sections:\n1. 현재 상황 요약\n2. 학생 데이터 기반 해석\n3. 상담 접근 전략\n4. 교사가 던질 수 있는 질문 3개\n5. 피해야 할 말 또는 주의점\n6. 다음 수업에서 해볼 수 있는 작은 지원\n\nStudent Data:\n- Alias: ${studentAlias}\n- Grade Summary: ${gradeSummary}\n- Learning Traits: ${learningTraits}\nTeacher Concern: ${teacherConcern}\n`;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
